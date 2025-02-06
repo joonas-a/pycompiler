@@ -9,3 +9,36 @@ def test_tokenizer_basics() -> None:
         Token("while", "identifier", Location(1, (0, 5))),
         Token("else", "identifier", Location(3, (1, 5))),
     ]
+
+
+def test_tokenizer_operators() -> None:
+    assert tokenize("1+2-/<>\n<=>=!====*") == [
+        Token("1", "int_literal", Location(0, (0, 1))),
+        Token("+", "operator", L),
+        Token("2", "int_literal", L),
+        Token("-", "operator", L),
+        Token("/", "operator", L),
+        Token("<", "operator", L),
+        Token(">", "operator", L),
+        Token("<=", "operator", Location(1, (0, 2))),
+        Token(">=", "operator", L),
+        Token("!=", "operator", L),
+        Token("==", "operator", L),
+        Token("=", "operator", L),
+        Token("*", "operator", L),
+    ]
+
+
+def test_tokenizer_punctuation() -> None:
+    assert tokenize("()), {{}}, ; ") == [
+        Token("(", "punctuation", L),
+        Token(")", "punctuation", L),
+        Token(")", "punctuation", L),
+        Token(",", "punctuation", L),
+        Token("{", "punctuation", L),
+        Token("{", "punctuation", L),
+        Token("}", "punctuation", L),
+        Token("}", "punctuation", L),
+        Token(",", "punctuation", L),
+        Token(";", "punctuation", L),
+    ]
