@@ -42,3 +42,17 @@ def test_tokenizer_punctuation() -> None:
         Token(",", "punctuation", L),
         Token(";", "punctuation", L),
     ]
+
+
+def test_one_line_comment() -> None:
+    assert tokenize("s# 404\n2") == [
+        Token("s", "identifier", L),
+        Token("2", "int_literal", L),
+    ]
+
+
+def test_multi_line_comment() -> None:
+    assert tokenize("a/*a\nb\n#c\n//\nd*/e") == [
+        Token("a", "identifier", L),
+        Token("e", "identifier", L),
+    ]

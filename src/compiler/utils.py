@@ -2,7 +2,16 @@ from dataclasses import dataclass
 from typing import Literal, Tuple
 
 
-Kind = Literal["int_literal", "identifier", "operator", "other", "punctuation"]
+Kind = Literal[
+    "comment",
+    "comment_start",
+    "comment_end",
+    "int_literal",
+    "identifier",
+    "operator",
+    "other",
+    "punctuation",
+]
 
 
 @dataclass
