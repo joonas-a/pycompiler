@@ -31,16 +31,16 @@ def test_tokenizer_operators() -> None:
 
 def test_tokenizer_punctuation() -> None:
     assert tokenize("()), {{}}, ; ") == [
-        Token("(", "punctuation", L),
-        Token(")", "punctuation", L),
-        Token(")", "punctuation", L),
-        Token(",", "punctuation", L),
-        Token("{", "punctuation", L),
-        Token("{", "punctuation", L),
-        Token("}", "punctuation", L),
-        Token("}", "punctuation", L),
-        Token(",", "punctuation", L),
-        Token(";", "punctuation", L),
+        Token("(", "punctuator", L),
+        Token(")", "punctuator", L),
+        Token(")", "punctuator", L),
+        Token(",", "punctuator", L),
+        Token("{", "punctuator", L),
+        Token("{", "punctuator", L),
+        Token("}", "punctuator", L),
+        Token("}", "punctuator", L),
+        Token(",", "punctuator", L),
+        Token(";", "punctuator", L),
     ]
 
 

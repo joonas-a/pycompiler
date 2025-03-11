@@ -16,6 +16,7 @@ pytest = "^8.3.3"
 
 [tool.poetry.scripts]
 main = "compiler.__main__:main"
+test = "compiler.tester:main"
 
 [build-system]
 requires = ["poetry-core"]

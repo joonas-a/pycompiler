@@ -18,7 +18,7 @@ def parseKind(value: str) -> Kind:
     elif value in OPERATORS:
         return "operator"
     elif value in PUNCTUATORS:
-        return "punctuation"
+        return "punctuator"
     elif value in COMMENTS:
         return "comment"
     elif value in COMMENT_START:
