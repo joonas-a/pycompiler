@@ -6,6 +6,8 @@ from .utils import Token, Location, Kind
 OPERATORS = ["+", "-", "*", "/", "=", "==", "!=", "<=", ">=", "<", ">"]
 PUNCTUATORS = ["(", ")", "{", "}", ",", ";"]
 
+CONDITIONALS = ["if", "then", "else"]
+
 COMMENTS = ["//", "#"]
 COMMENT_START = ["/*"]
 COMMENT_END = ["*/"]
@@ -25,6 +27,8 @@ def parseKind(value: str) -> Kind:
         return "comment_start"
     elif value in COMMENT_END:
         return "comment_end"
+    elif value in CONDITIONALS:
+        return "conditional"
     else:
         return "identifier"
 

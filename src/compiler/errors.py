@@ -3,5 +3,8 @@ class EmptyInputError(Exception):
 
 
 class UnexpectedTokenError(Exception):
-    def __str__(self):
-        return f"{self.args[0]}"
+    pass
+
+
+class MissingTokenError(Exception):
+    pass

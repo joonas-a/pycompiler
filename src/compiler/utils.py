@@ -5,6 +5,7 @@ Kind = Literal[
     "comment",
     "comment_start",
     "comment_end",
+    "conditional",
     "end",
     "int_literal",
     "identifier",

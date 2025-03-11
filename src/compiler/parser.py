@@ -1,5 +1,5 @@
 import compiler.ast as ast
-from compiler.errors import EmptyInputError, UnexpectedTokenError
+from compiler.errors import EmptyInputError, UnexpectedTokenError, MissingTokenError
 from compiler.utils import Token
 
 """
@@ -12,20 +12,27 @@ def raise_error(token: Token) -> None:
     if token.kind == "punctuator":
         if token.text == ")":
             raise UnexpectedTokenError(f"{token.loc}: Unexpected closing parenthesis")
+    if token.kind == "conditional":
+        if token.text == "if":
+            raise UnexpectedTokenError(f"{token.loc}: Unexpected if")
+        if token.text == "then":
+            raise UnexpectedTokenError(f"{token.loc}: Unexpected then")
+        if token.text == "else":
+            raise UnexpectedTokenError(f"{token.loc}: Unexpected else")
     raise UnexpectedTokenError(f"{token.loc}: Unexpected token")
 
 
 def parse(tokens: list[Token]) -> ast.Expression:
     pos = 0
     open_parantheses = 0
+    open_ifs = 0
 
     def check_open_parantheses() -> bool:
-        print("num of open parans", open_parantheses)
         return open_parantheses > 0
 
     def peek() -> Token:
-        print("peek", pos)
         if pos < len(tokens):
+            print("peeking at:", pos, tokens[pos].text)
             return tokens[pos]
         elif pos == 0:
             raise EmptyInputError("Input string is empty")
@@ -39,7 +46,7 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def consume(expected: str | list[str] | None = None) -> Token:
         nonlocal pos
         token = peek()
-        print("consumed", pos, token.text)
+        print("consumed at:", pos, token.text)
         if isinstance(expected, str) and token.text != expected:
             raise UnexpectedTokenError(f'{token.loc}: expected "{expected}"')
         if isinstance(expected, list) and token.text not in expected:
@@ -51,16 +58,45 @@ def parse(tokens: list[Token]) -> ast.Expression:
         return token
 
     def parse_int_literal() -> ast.Literal:
-        if peek().kind != "int_literal":
-            raise UnexpectedTokenError(f"{peek().loc}: expected an integer literal")
         token = consume()
+        if token.kind != "int_literal":
+            raise UnexpectedTokenError(f"{token.loc}: expected an integer literal")
         return ast.Literal(int(token.text))
 
     def parse_identifier() -> ast.Identifier:
-        if peek().kind != "identifier":
-            raise UnexpectedTokenError(f"{peek().loc}: expected an identifier")
         token = consume()
+        if token.kind != "identifier":
+            raise UnexpectedTokenError(f"{token.loc}: expected an identifier")
         return ast.Identifier(token.text)
+
+    def parse_conditional() -> ast.Expression:
+        nonlocal open_ifs
+
+        # Initialize branches as None
+        then_branch = None
+        else_branch = None
+
+        if peek().text == "if":
+            consume("if")
+            open_ifs += 1
+            condition = parse_expression()
+
+        if peek().text == "then":
+            consume("then")
+            then_branch = parse_expression()
+        if peek().text == "else":
+            consume("else")
+            else_branch = parse_expression()
+
+        open_ifs -= 1
+
+        if then_branch is None:
+            raise MissingTokenError(f"{peek().loc}: Missing then branch")
+
+        elif else_branch is None:
+            return ast.IfThen(condition, then_branch)
+        else:
+            return ast.IfThenElse(condition, then_branch, else_branch)
 
     def parse_parenthesized() -> ast.Expression:
         nonlocal open_parantheses
@@ -73,21 +109,24 @@ def parse(tokens: list[Token]) -> ast.Expression:
 
     def parse_factor() -> ast.Expression:
         match peek().kind:
+            case "conditional":
+                print("CONDITIONAL")
+                return parse_conditional()
             case "punctuator":
-                print("Punctuator", pos)
+                print("PUNCTUATOR", pos)
                 if peek().text == "(":
                     return parse_parenthesized()
                 if peek().text == ")":
-                    print("SOS SOS SOS")
+                    print("ERROR")
                     raise UnexpectedTokenError(
                         f"{peek().loc}: Unexpected closing parenthesis"
                     )
                 raise Exception(f"{peek().loc}: Unimplemented punctuator")
             case "int_literal":
-                print("Int literal", pos)
+                print("INT LITERAL")
                 return parse_int_literal()
             case "identifier":
-                print("Identifier", pos)
+                print("IDENTIFIER")
                 return parse_identifier()
 
             case _:
@@ -100,8 +139,12 @@ def parse(tokens: list[Token]) -> ast.Expression:
             operator = operator_token.text
             right = parse_factor()
             left = ast.BinaryOp(left, operator, right)
-        if peek().kind not in ["operator", "end"] and not check_open_parantheses():
-            print(" going to raise error")
+        if (
+            peek().kind not in ["operator", "end"]
+            and not check_open_parantheses()
+            and not open_ifs
+        ):
+            print("Raising error at parse_term()")
             raise_error(peek())
         return left
 
@@ -112,7 +155,8 @@ def parse(tokens: list[Token]) -> ast.Expression:
             operator = operator_token.text
             right = parse_term()
             left = ast.BinaryOp(left, operator, right)
-        if peek().kind not in ["end"] and not check_open_parantheses():
+        if peek().kind not in ["end"] and not check_open_parantheses() and not open_ifs:
+            print("Raising error at parse_expression()")
             raise_error(peek())
         return left
 

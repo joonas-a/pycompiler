@@ -1,8 +1,10 @@
 from pytest import fail
-from compiler.ast import BinaryOp, Literal, Identifier
-from compiler.errors import EmptyInputError, UnexpectedTokenError
+
+from compiler.ast import BinaryOp, Identifier, IfThenElse, Literal, IfThen
+from compiler.errors import EmptyInputError, UnexpectedTokenError, MissingTokenError
 from compiler.parser import parse
-from compiler.utils import Token, L, Location
+from compiler.utils import L, Location, Token
+from compiler.tokenizer import tokenize
 
 
 def test_empty() -> None:
@@ -203,3 +205,64 @@ def test_fail_missing_operator() -> None:
         fail("Parser did not catch the missing operator")
     except UnexpectedTokenError as e:
         assert str(e) == f"{loc}: Unexpected token"
+
+
+def test_basic_if_then() -> None:
+    assert parse(tokenize("if true then 2")) == IfThen(
+        condition=Identifier("true"),
+        then_branch=Literal(2),
+    )
+
+
+def test_if_else() -> None:
+    assert parse(tokenize("if true then 2 else 3")) == IfThenElse(
+        condition=Identifier("true"),
+        then_branch=Literal(2),
+        else_branch=Literal(3),
+    )
+
+
+def test_if_then_else() -> None:
+    assert parse(tokenize("if a + b then 2 * 3 else false")) == IfThenElse(
+        condition=BinaryOp(Identifier("a"), "+", Identifier("b")),
+        then_branch=BinaryOp(Literal(2), "*", Literal(3)),
+        else_branch=Identifier("false"),
+    )
+
+
+def test_nested_if_else() -> None:
+    assert parse(tokenize("if a then if b then 2 else 3 else 4")) == IfThenElse(
+        condition=Identifier("a"),
+        then_branch=IfThenElse(
+            condition=Identifier("b"),
+            then_branch=Literal(2),
+            else_branch=Literal(3),
+        ),
+        else_branch=Literal(4),
+    )
+
+
+def test_big_nest_if_then() -> None:
+    assert parse(
+        tokenize("if a then if b then if c then 1 else 2 else 3 else 4")
+    ) == IfThenElse(
+        condition=Identifier("a"),
+        then_branch=IfThenElse(
+            condition=Identifier("b"),
+            then_branch=IfThenElse(
+                condition=Identifier("c"),
+                then_branch=Literal(1),
+                else_branch=Literal(2),
+            ),
+            else_branch=Literal(3),
+        ),
+        else_branch=Literal(4),
+    )
+
+
+def test_fail_if_else_no_then_statement() -> None:
+    try:
+        parse(tokenize("if a else 3"))
+        fail("Parser did not catch the missing then statement")
+    except MissingTokenError as e:
+        assert str(e) == "Location(line=0, column=(10, 11)): Missing then branch"
