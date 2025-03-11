@@ -266,3 +266,7 @@ def test_fail_if_else_no_then_statement() -> None:
         fail("Parser did not catch the missing then statement")
     except MissingTokenError as e:
         assert str(e) == "Location(line=0, column=(10, 11)): Missing then branch"
+
+
+def test_remainder_operator() -> None:
+    assert parse(tokenize("1 % 2")) == BinaryOp(Literal(1), "%", Literal(2))

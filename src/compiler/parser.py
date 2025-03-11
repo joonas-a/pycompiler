@@ -7,6 +7,20 @@ TODO:: todo
 
 """
 
+RIGHT_ASSOCIATIVE_OPS = [
+    ["="],
+]
+
+LEFT_ACCOSIATIVE_OPS = [
+    ["or"],
+    ["and"],
+    ["==", "!="],
+    ["<", "<=", ">", ">="],
+    ["+", "-"],
+    ["*", "/", "%"],
+]
+MAX_PRECEDENCE = len(LEFT_ACCOSIATIVE_OPS) - 1
+
 
 def raise_error(token: Token) -> None:
     if token.kind == "punctuator":
@@ -26,9 +40,6 @@ def parse(tokens: list[Token]) -> ast.Expression:
     pos = 0
     open_parantheses = 0
     open_ifs = 0
-
-    def check_open_parantheses() -> bool:
-        return open_parantheses > 0
 
     def peek() -> Token:
         if pos < len(tokens):
@@ -72,7 +83,6 @@ def parse(tokens: list[Token]) -> ast.Expression:
     def parse_conditional() -> ast.Expression:
         nonlocal open_ifs
 
-        # Initialize branches as None
         then_branch = None
         else_branch = None
 
@@ -132,32 +142,41 @@ def parse(tokens: list[Token]) -> ast.Expression:
             case _:
                 raise UnexpectedTokenError(f"{peek().loc}: Invalid token")
 
-    def parse_term() -> ast.Expression:
-        left = parse_factor()
-        while peek().text in ["*", "/"]:
+    def parse_term(level: int) -> ast.Expression:
+        if level is MAX_PRECEDENCE:
+            left = parse_factor()
+        else:
+            left = parse_term(level + 1)
+
+        while peek().text in LEFT_ACCOSIATIVE_OPS[level]:
+            print("curr ops: ", LEFT_ACCOSIATIVE_OPS[level])
             operator_token = consume()
             operator = operator_token.text
-            right = parse_factor()
+
+            print("RIGHT")
+            if level is MAX_PRECEDENCE:
+                right = parse_factor()
+            else:
+                right = parse_term(level + 1)
+
             left = ast.BinaryOp(left, operator, right)
+
         if (
             peek().kind not in ["operator", "end"]
-            and not check_open_parantheses()
+            and not open_parantheses
             and not open_ifs
         ):
             print("Raising error at parse_term()")
             raise_error(peek())
+
         return left
 
     def parse_expression() -> ast.Expression:
-        left = parse_term()
-        while peek().text in ["+", "-"]:
-            operator_token = consume()
-            operator = operator_token.text
-            right = parse_term()
-            left = ast.BinaryOp(left, operator, right)
-        if peek().kind not in ["end"] and not check_open_parantheses() and not open_ifs:
+        result = parse_term(level=0)
+
+        if peek().kind not in ["end"] and not open_parantheses and not open_ifs:
             print("Raising error at parse_expression()")
             raise_error(peek())
-        return left
+        return result
 
     return parse_expression()

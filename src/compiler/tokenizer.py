@@ -3,7 +3,7 @@ from typing import List, Tuple
 from .utils import Token, Location, Kind
 
 
-OPERATORS = ["+", "-", "*", "/", "=", "==", "!=", "<=", ">=", "<", ">"]
+OPERATORS = ["+", "-", "*", "/", "=", "==", "!=", "<=", ">=", "<", ">", "%"]
 PUNCTUATORS = ["(", ")", "{", "}", ",", ";"]
 
 CONDITIONALS = ["if", "then", "else"]
@@ -38,7 +38,7 @@ def parseLoc(line: int, span: Tuple[int, int]) -> Location:
 
 
 r = re.compile(
-    r"#|\*\/|\/\*|\/\/|==|!=|<=|>=|>|<|\+|\-|\*|\/|=|\(|\)|\{|\}|,|;|[a-zA-Z_]+[a-zA-Z0-9_]*|[0-9]+"
+    r"#|\*\/|\/\*|\/\/|==|!=|<=|>=|>|<|\+|\-|\*|\/|%|=|\(|\)|\{|\}|,|;|[a-zA-Z_]+[a-zA-Z0-9_]*|[0-9]+"
 )
 
 
